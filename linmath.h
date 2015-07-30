@@ -500,15 +500,30 @@ static inline void mat4x4_from_quat(mat4x4 M, quat q)
 	M[3][0] = M[3][1] = M[3][2] = 0.f;
 	M[3][3] = 1.f;
 }
+
 static inline void mat4x4_mul_quat(mat4x4 R, mat4x4 M, quat q)
 {
-	quat_mul_vec3(R[0], M[0], q);
-	quat_mul_vec3(R[1], M[1], q);
-	quat_mul_vec3(R[2], M[2], q);
+#if 0
+/* The idea of this code is, that the columns of the matrix can be
+ * transformed directly. Only this violates the convention of linmath.h
+ * that everything is r-multiplied on matrices. */
+	quat_mul_vec3(R[0], q, M[0]);
+	quat_mul_vec3(R[1], q, M[1]);
+	quat_mul_vec3(R[2], q, M[2]);
 
 	R[3][0] = R[3][1] = R[3][2] = 0.f;
 	R[3][3] = 1.f;
+#else
+/* creating a temporary matrix is the naive way of implementing this, but
+ * the direct way of transforming the incoming directly by the quaternion
+ * can be done as well. For now just use a temporary. */
+
+	mat4x4 T;
+	mat4x4_from_quat(T, q);
+	mat4x4_mul(R, M, T);
+#endif
 }
+
 static inline void quat_from_mat4x4(quat q, mat4x4 M)
 {
 	float r=0.f;
